@@ -1,12 +1,13 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import types from './types'
-import ApiLibrary from '@/api/Library'
-import libraries from '../../libshort.json'
-import librariesAll from '../../libraries.json'
+import libraries from '../../libraries.json'
 
 Vue.use(Vuex)
 
+/**
+ * Кол-во элементов на странице для виртуального скролла
+ */
 const PAGE_SIZE = 30
 
 export default new Vuex.Store({
@@ -15,6 +16,11 @@ export default new Vuex.Store({
     allLibraries: null,
     fetchedLibraries: null,
     page: 1,
+  },
+  getters: {
+    getLibraryById: (state) => (id) => {
+      return state?.fetchedLibraries?.find((library) => library._id === id)
+    },
   },
   mutations: {
     [types.SET_LIBRARIES](state, payload) {
@@ -34,14 +40,21 @@ export default new Vuex.Store({
     },
   },
   actions: {
+    /**
+     * Этот action имитация обращения к API opendata, т.к. возникли проблемы с CORS сделал следующее:
+     * - выгрузил весь набор данных в JSON (файл libraries.json в корне проекта)
+     * - записываем в store этот набор
+     * - далее есть поле fetchedLibraries - это массив библиотек для работы виртуального скролла
+     * - по мере скрола вниз массив fetchedLibraries берет следующие 30 элементов из общего хранилища allLibraries и добавляет к текущему массиву
+     * - ИТД
+     */
     async [types.GET_LIBRARIES]({ commit, state }) {
       if (state?.allLibraries?.length) return
       commit(types.SET_LOADING, true)
       const result = await new Promise((resolve) => {
-        setTimeout(() => resolve(librariesAll), 2000)
+        setTimeout(() => resolve(libraries), 500)
       })
       commit(types.SET_LIBRARIES, result)
-
       commit(
         types.SET_FETCHED_LIBRARIES,
         state.allLibraries.slice(0, PAGE_SIZE)
@@ -49,23 +62,12 @@ export default new Vuex.Store({
       commit(types.SET_LOADING, false)
     },
     [types.INCREASE_PAGE_ACTION]({ commit, state }) {
-      // console.log('before commit', state.page, (state.page - 1) * PAGE_SIZE + 1)
       commit(types.INCREASE_PAGE)
-      // console.log('after commit', state.page)
       const start = (state.page - 1) * PAGE_SIZE
       const end = start + PAGE_SIZE
-      // return
-      // console.log(libraries.slice(start, end))
       commit(types.ADD_LIBS, state.allLibraries.slice(start, end))
     },
   },
-  // modules: {},
 })
 
 Vue.use(Vuex)
-
-// export default new Vuex.Store({
-//   modules: {
-//     library,
-//   },
-// })

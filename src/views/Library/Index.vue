@@ -1,22 +1,9 @@
 <template>
-  <div class="container pt-2 d-flex flex-grow-1">
-    <div class="loading-element" v-if="loading">
-      <h3>LOADING...</h3>
-    </div>
+  <div class="container pt-4 d-flex flex-grow-1">
+    <LoadingElement v-if="loading" />
     <div class="row" v-else>
-      <div
-        class="col-12"
-        v-for="(item, index) in items"
-        :key="item._id"
-        @click="openDetails(item)"
-      >
-        <div class="lib-item py-3 mb-2">
-          <span>{{ index + 1 }}</span>
-          {{ item.data.general.name }}
-        </div>
-      </div>
+      <LibraryBlock v-for="item in items" :item="item" :key="item._id" />
       <Observer @intersect="intersected" />
-      <!-- <div class="col-12 b2 col-sm-6 col-md-4 col-lg-3">123</div> -->
     </div>
   </div>
 </template>
@@ -24,11 +11,15 @@
 <script>
 import { mapActions, mapState } from 'vuex'
 import Observer from '@/components/Observer'
+import LibraryBlock from '@/components/LibraryBlock'
 import types from '@/store/types'
+import LoadingElement from '@/components/Loading'
 export default {
   name: 'Library',
   components: {
     Observer,
+    LibraryBlock,
+    LoadingElement,
   },
   computed: {
     ...mapState({
@@ -36,16 +27,10 @@ export default {
       items: (state) => state.fetchedLibraries,
     }),
   },
-  async mounted() {
-    await this[types.GET_LIBRARIES]()
-  },
   methods: {
-    // ...mapMutations([types.SET_LOADING]),
-    ...mapActions([types.GET_LIBRARIES, types.INCREASE_PAGE_ACTION]),
+    ...mapActions([types.INCREASE_PAGE_ACTION]),
     async intersected() {
       const part = await this[types.INCREASE_PAGE_ACTION]()
-      //
-      // console.log('part', part)
     },
     openDetails(item) {
       console.log(item)
@@ -54,22 +39,3 @@ export default {
   },
 }
 </script>
-
-<style scoped lang="scss">
-// .app-wrapper {
-//   display: flex;
-//   flex-flow: column;
-//   min-height: 100vh;
-// }
-.lib-item {
-  border: 1px solid silver;
-}
-
-.loading-element {
-  border: 1px solid blue;
-  display: flex;
-  flex-grow: 1;
-  justify-content: center;
-  align-items: center;
-}
-</style>
